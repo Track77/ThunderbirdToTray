@@ -20,12 +20,18 @@ namespace ThunderbirdToTray
         private readonly Timer _timer;
         private string _path;
         private bool _isMaximized;
+        private bool _isOpening;
 
 
         public ThunderbirdApplication()
         {
             _timer = new Timer();
-            _timer.Interval = 250;
+            var processes = Process.GetProcessesByName(THUNDERBIRD_NAME);
+            if (processes.Length == 0)
+                _timer.Interval = 30 * 1000;
+            else
+                _timer.Interval = 250;
+
             _timer.Elapsed += this._timer_Elapsed;
             _timer.Start();
         }
@@ -57,6 +63,10 @@ namespace ThunderbirdToTray
                             User32.ShowWindow(Handle, User32.WindowState.SW_MAXIMIZE);
                         else
                             User32.ShowWindow(Handle, User32.WindowState.SW_RESTORE);
+
+                        User32.SetForegroundWindow(Handle);
+                        User32.SetActiveWindow(Handle);
+                        User32.SetFocus(Handle);
                     }
                     else
                     {
@@ -85,6 +95,8 @@ namespace ThunderbirdToTray
         private void _timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             _timer.Stop();
+            if (_timer.Interval > 250)
+                _timer.Interval = 250;
 
             Find();
 
@@ -117,11 +129,18 @@ namespace ThunderbirdToTray
                     break;
                 }
             }
+
+            if (_isOpening)
+                return;
+
             if (!User32.IsWindow(Handle) && !string.IsNullOrWhiteSpace(_path) && File.Exists(_path))
             {
-                Process.Start(_path);
+                _isOpening = true;
+                var process = Process.Start(_path);
+                process?.WaitForInputIdle(1000);
                 Find();
                 Hide();
+                _isOpening = false;
             }
         }
     }
