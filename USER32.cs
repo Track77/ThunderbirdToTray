@@ -136,6 +136,10 @@ namespace Kstudio.Forms.WinApi
 
 
         [DllImport("user32.dll")]
+        public static extern IntPtr SetForegroundWindow(IntPtr hWnd);
+
+
+        [DllImport("user32.dll")]
         public static extern bool IsWindowVisible(IntPtr hWnd);
 
 

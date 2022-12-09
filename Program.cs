@@ -14,30 +14,29 @@ namespace ThunderbirdToTray
         static readonly NotifyIcon notifyIcon = new NotifyIcon();
         private static ThunderbirdApplication application;
 
-        [DllImport("Kernel32")]
-        private static extern IntPtr GetConsoleWindow();
 
         static void Main(string[] args)
         {
-            var hwnd = GetConsoleWindow();
-            User32.ShowWindow(hwnd, User32.WindowState.SW_HIDE);
-
-
             application = new ThunderbirdApplication();
             notifyIcon.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
 
+            var contextMenu = new ContextMenuStrip();
             notifyIcon.Click += (s, e) =>
             {
-                application.Visible = !application.Visible;
+                if (contextMenu.Visible)
+                    return;
+
+                var visible = application.Visible;
+                application.Visible = !visible;
             };
 
             notifyIcon.Visible = true;
             notifyIcon.Text = Application.ProductName;
 
-            var contextMenu = new ContextMenuStrip();
             contextMenu.Items.Add("Exit", null, (s, e) =>
             {
-                application.Visible = true;
+                //application.Visible = true;
+                application.Exit();
                 Application.Exit();
             });
 
